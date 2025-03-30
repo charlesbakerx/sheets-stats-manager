@@ -23,3 +23,10 @@ function processEntitiesForPlanning() {
   // Write to planning sheet starting at A2 to preserve headers
   planningSheet.getRange(2, 1, processedData.length, selectedCols.length).setValues(processedData);
 }
+
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('Planning Tools')
+    .addItem('Process Entities', 'processEntitiesForPlanning')
+    .addToUi();
+}
