@@ -1,0 +1,5 @@
+// Pull only the rows where a status is set and sort them by the status column.
+=SORT(
+  FILTER(planning!A2:Z, planning!M2:M <> ""),
+  planning!M2:M, TRUE
+)
