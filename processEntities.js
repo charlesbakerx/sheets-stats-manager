@@ -3,8 +3,17 @@ function processEntitiesForPlanning() {
   const rawSheet = ss.getSheetByName('raw-data');
   const planningSheet = ss.getSheetByName('planning');
 
+  if (!rawSheet || !planningSheet) {
+    throw new Error("One or both sheets ('raw-data' or 'planning') are missing.");
+  }
+
   // Clear only values from previous import, not data validation or formatting
-  planningSheet.getRange('A2:Z').clear({ contentsOnly: true });
+  const lastRow = planningSheet.getLastRow();
+  const lastCol = planningSheet.getLastColumn();
+  if (lastRow > 1) {
+    archivePlanningSheet();
+    planningSheet.getRange(2, 1, lastRow - 1, lastCol).clear({ contentsOnly: true});
+  }
 
   const rawData = rawSheet.getDataRange().getValues();
 
@@ -23,6 +32,35 @@ function processEntitiesForPlanning() {
   // Write to planning sheet starting at A2 to preserve headers
   planningSheet.getRange(2, 1, processedData.length, selectedCols.length).setValues(processedData);
 }
+
+function archivePlanningSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const planningSheet = ss.getSheetByName('planning');
+
+  if (!planningSheet) {
+    throw new Error("Sheet 'planning' does not exist.");
+  }
+
+  // Get yesterday's date
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const formattedDate = Utilities.formatDate(yesterday, ss.getSpreadsheetTimeZone(), 'MMdd');
+  const newSheetName = `planning-${formattedDate}`;
+
+  // Delete the sheet if it already exists
+  const existing = ss.getSheetByName(newSheetName);
+  if (existing) {
+    ss.deleteSheet(existing);
+  }
+
+  const archivedSheet = planningSheet.copyTo(ss);
+  archivedSheet.setName(newSheetName);
+  archivedSheet.hideSheet();
+
+  
+}
+
 
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
